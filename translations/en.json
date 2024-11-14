@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bluelab Guardian Setup",
+        "description": "Enter your API token to connect to the Bluelab Guardian.",
+        "data": {
+          "api_token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Bluelab Guardian API. Please check your API token."
+    }
+  }
+}
