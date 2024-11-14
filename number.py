@@ -1,0 +1,46 @@
+import logging
+import requests
+from homeassistant.components.number import NumberEntity
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    devices = hass.data[DOMAIN][entry.entry_id]["devices"]
+    entities = [
+        BluelabGuardianNumber(hass, device, setting, entry.data["api_token"])
+        for device in devices
+        for setting in ["ph_low_alarm", "ph_high_alarm", "ec_low_alarm", "ec_high_alarm", "temp_low_alarm", "temp_high_alarm"]
+    ]
+    hass.data[DOMAIN][entry.entry_id]["attribute_entities"].extend(entities)
+    async_add_entities(entities, update_before_add=True)
+
+class BluelabGuardianNumber(NumberEntity):
+    def __init__(self, hass, device, setting, api_token):
+        self.hass = hass
+        self.device_id = device["id"]
+        self._name = f"{device['label']} {setting.replace('_', ' ').capitalize()}"
+        self.setting = setting
+        self.api_token = api_token
+        self._value = None
+
+    @property
+    def native_value(self):
+        return self._value
+
+    async def async_set_native_value(self, value):
+        attributes_url = f"{DEVICE_ATTRIBUTE_URL}{self.device_id}"
+        headers = {"Authorization": self.api_token}
+        response = await self.hass.async_add_executor_job(lambda: requests.post(
+            attributes_url, json={"key": f"setting.{self.setting}", "value": value}, headers=headers))
+        response.raise_for_status()
+        self._value = value
+        self.async_write_ha_state()
+
+    def update_attributes(self, attributes_data):
+        for attribute in attributes_data:
+            if attribute["key"] == f"setting.{self.setting}":
+                nested_value = attribute.get("value", {}).get("value")
+                if isinstance(nested_value, (int, float)):
+                    self._value = nested_value
+                    self.async_write_ha_state()

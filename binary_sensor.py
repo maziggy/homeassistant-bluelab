@@ -1,0 +1,36 @@
+import logging
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    devices = hass.data[DOMAIN][entry.entry_id]["devices"]
+    entities = [
+        BluelabGuardianAlarmBinarySensor(hass, device, alarm_type, entry.data["api_token"])
+        for device in devices
+        for alarm_type in ["ph_high_alarm", "ph_low_alarm", "temp_high_alarm", "temp_low_alarm", "ec_high_alarm", "ec_low_alarm"]
+    ]
+    hass.data[DOMAIN][entry.entry_id]["attribute_entities"] = entities
+    async_add_entities(entities, update_before_add=True)
+
+class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
+    def __init__(self, hass, device, alarm_type, api_token):
+        self.hass = hass
+        self.device_id = device["id"]
+        self._name = f"{device['label']} {alarm_type.replace('_', ' ').capitalize()}"
+        self.alarm_type = alarm_type
+        self.api_token = api_token
+        self._state = False
+
+    @property
+    def is_on(self):
+        return self._state
+
+    def update_attributes(self, attributes_data):
+        for attribute in attributes_data:
+            if attribute["key"] == f"alarm.{self.alarm_type}":
+                new_state = attribute["value"]
+                if new_state != self._state:
+                    self._state = new_state
+                    self.async_write_ha_state()

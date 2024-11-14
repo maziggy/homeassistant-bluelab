@@ -1,0 +1,68 @@
+import logging
+from homeassistant.components.switch import SwitchEntity
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Bluelab Guardian switch entities based on a config entry."""
+    devices = hass.data[DOMAIN][entry.entry_id]["devices"]
+    api_token = entry.data["api_token"]
+
+    entities = []
+    for device in devices:
+        entity = BluelabGuardianSwitch(hass, device, api_token)
+        entities.append(entity)
+
+    hass.data[DOMAIN][entry.entry_id]["attribute_entities"].extend(entities)
+    async_add_entities(entities, update_before_add=True)
+
+class BluelabGuardianSwitch(SwitchEntity):
+    """Representation of a Bluelab Guardian switch for alarms setting."""
+
+    def __init__(self, hass, device, api_token):
+        self.hass = hass
+        self.device_id = device["id"]
+        self._name = f"{device['label']} Alarms"
+        self.api_token = api_token
+        self._state = False
+
+    @property
+    def unique_id(self):
+        return f"{self.device_id}_alarms"
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_on(self):
+        return self._state
+
+    async def async_turn_on(self):
+        await self._set_state(True)
+
+    async def async_turn_off(self):
+        await self._set_state(False)
+
+    async def _set_state(self, state):
+        attributes_url = f"https://api.edenic.io/api/v1/device-attribute/{self.device_id}"
+        headers = {"Authorization": self.api_token}
+        try:
+            response = await self.hass.async_add_executor_job(lambda: requests.post(
+                attributes_url, json={"key": "setting.alarms", "value": state}, headers=headers))
+            response.raise_for_status()
+            _LOGGER.debug("Set alarms to %s for %s", state, self._name)
+            self._state = state
+            self.async_write_ha_state()
+        except requests.RequestException as err:
+            _LOGGER.error("Failed to set alarms for %s: %s", self._name, err)
+
+    def update_attributes(self, attributes_data):
+        for attribute in attributes_data:
+            if attribute["key"] == "setting.alarms":
+                new_state = attribute["value"]
+                if new_state != self._state:
+                    _LOGGER.debug("Updating %s from %s to %s", self._name, self._state, new_state)
+                    self._state = new_state
+                    self.async_write_ha_state()
