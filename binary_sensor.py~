@@ -55,6 +55,12 @@ class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
         """Update binary sensor state based on device attributes."""
         for attribute in attributes_data:
             if attribute["key"] == f"alarm.{self.alarm_type}":
-                self._state = attribute["value"]
-                _LOGGER.debug("Updating %s state to %s", self._name, self._state)
-                self.async_write_ha_state()  # Ensures Home Assistant registers the updated state
+                new_state = attribute["value"]
+                _LOGGER.debug("Fetched attribute for %s: %s", self.alarm_type, new_state)
+                
+                if new_state != self._state:
+                    _LOGGER.debug("Updating state of %s from %s to %s", self._name, self._state, new_state)
+                    self._state = new_state
+                    self.async_write_ha_state()
+                else:
+                    _LOGGER.debug("State of %s remains unchanged at %s", self._name, self._state)

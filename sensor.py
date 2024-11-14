@@ -51,6 +51,17 @@ class BluelabGuardianSensor(Entity):
             "model": "Guardian",
         }
 
+    @property
+    def icon(self):
+        """Return the icon for the sensor based on its type."""
+        if self.sensor_type == "ph":
+            return "mdi:ph"
+        elif self.sensor_type == "temperature":
+            return "mdi:thermometer"
+        elif self.sensor_type == "electrical_conductivity":
+            return "mdi:fence-electric"
+        return "mdi:eye"  # Default icon
+
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
         if self.sensor_type in telemetry_data:

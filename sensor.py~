@@ -51,9 +51,27 @@ class BluelabGuardianSensor(Entity):
             "model": "Guardian",
         }
 
+    @property
+    def icon(self):
+        """Return the icon for the sensor based on its type."""
+        if self.sensor_type == "ph":
+            return "mdi:ph"
+        elif self.sensor_type == "temperature":
+            return "mdi:thermometer"
+        elif self.sensor_type == "electrical_conductivity":
+            return "mdi:flash"
+        return "mdi:fence-electric"  # Default icon
+
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
         if self.sensor_type in telemetry_data:
-            self._state = telemetry_data[self.sensor_type][0]["value"]
-            _LOGGER.debug("Updating %s state to %s", self._name, self._state)
-            self.async_write_ha_state()  # Ensures Home Assistant registers the updated state
+            new_state = telemetry_data[self.sensor_type][0]["value"]
+            _LOGGER.debug("Fetched telemetry for %s: %s", self.sensor_type, new_state)
+            
+            # Check if the new state is different from the current state
+            if new_state != self._state:
+                _LOGGER.debug("Updating state of %s from %s to %s", self._name, self._state, new_state)
+                self._state = new_state
+                self.async_write_ha_state()
+            else:
+                _LOGGER.debug("State of %s remains unchanged at %s", self._name, self._state)

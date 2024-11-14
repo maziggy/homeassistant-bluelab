@@ -51,6 +51,15 @@ class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
             "model": "Guardian",
         }
 
+    @property
+    def icon(self):
+        """Return an icon specific to the alarm type."""
+        if "binary_sensor.water_monitor_ec_high_alarm" in self.alarm_type:
+            return "mdi:alert-circle"
+        elif "low_alarm" in self.alarm_type:
+            return "mdi:alert"
+        return "mdi:eye"  # Default alarm icon
+        
     def update_attributes(self, attributes_data):
         """Update binary sensor state based on device attributes."""
         for attribute in attributes_data:

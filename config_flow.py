@@ -17,7 +17,7 @@ class BluelabGuardianConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required(CONF_API_TOKEN): str,
-                vol.Required(CONF_ORGANIZATION_ID): str  # Prompt for organization ID
+                vol.Required(CONF_ORGANIZATION_ID): str,
+                vol.Required(CONF_API_TOKEN): str
             })
         )
