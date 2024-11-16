@@ -1,3 +1,5 @@
+import os
+import shutil
 import logging
 import requests
 import asyncio
@@ -9,8 +11,29 @@ from .const import DOMAIN, DEVICE_LIST_URL, TELEMETRY_URL, DEVICE_ATTRIBUTE_URL,
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def copy_static_files(hass: HomeAssistant):
+    """Copy static assets to the www directory."""
+    src_dir = os.path.join(os.path.dirname(__file__))
+    dst_dir = os.path.join(hass.config.path("www"))
+
+    # Ensure the destination directory exists
+    os.makedirs(dst_dir, exist_ok=True)
+
+    # Copy the icon and logo files
+    for file_name in ["icon.png", "logo.png"]:
+        src_file = os.path.join(src_dir, file_name)
+        dst_file = os.path.join(dst_dir, file_name)
+        if os.path.exists(src_file):
+            shutil.copy(src_file, dst_file)
+            
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluelab Guardian from a config entry."""
+
+    # Copy static files on setup
+    copy_static_files(hass)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
 
