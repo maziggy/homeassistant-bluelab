@@ -8,9 +8,5 @@
   "config_flow": true,
   "content_in_root": true,
   "codeowners": ["@maziggy"],
-  "iot_class": "cloud_polling",
-  "assets": {
-    "icon": "custom_components/homeassistant-bluelab/icon.png",
-    "logo": "custom_components/homeassistant-bluelab/logo.png"
-  }
+  "iot_class": "cloud_polling"
 }

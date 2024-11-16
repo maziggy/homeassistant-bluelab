@@ -1,6 +1,6 @@
 {
   "name": "Bluelab Guardian",
-  "content_in_root": true,
+  "content_in_root": false,
   "country": ["US", "DE"],
   "render_readme": true,
   "zip_release": false,
