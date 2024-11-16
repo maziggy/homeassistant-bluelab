@@ -2,7 +2,7 @@
   "domain": "bluelab_guardian",
   "name": "Bluelab Guardian",
   "version": "0.1",
-  "documentation": "https://github.com/maziggy/BluelabGuardian",
+  "documentation": "https://github.com/maziggy/homeassistant-bluelab",
   "requirements": [],
   "dependencies": [],
   "config_flow": true,
