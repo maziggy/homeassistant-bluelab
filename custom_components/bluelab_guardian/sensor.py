@@ -1,5 +1,6 @@
 import logging
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,14 +63,36 @@ class BluelabGuardianSensor(Entity):
             return "mdi:fence-electric"
         return "mdi:eye"  # Default icon
 
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        if self.sensor_type == "temperature":
+            return SensorDeviceClass.TEMPERATURE  # Predefined device class for temperature
+        elif self.sensor_type == "electrical_conductivity":
+            return SensorDeviceClass.CONDUCTIVITY  # Predefined device class for conductivity
+        return None  # No device class for 'ph', so return None
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
+        return "Units"  # Force a common unit for all sensors
+
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
         _LOGGER.debug("Updating telemetry for %s with data: %s", self.name, telemetry_data)
         if self.sensor_type in telemetry_data:
-            new_state = telemetry_data[self.sensor_type][0]["value"]
-            if new_state != self._state:
-                _LOGGER.debug("Updating state of %s from %s to %s", self.name, self._state, new_state)
-                self._state = new_state
-                self.async_write_ha_state()
-            else:
-                _LOGGER.debug("State of %s remains unchanged at %s", self.name, self._state)
+            try:
+                new_state = float(telemetry_data[self.sensor_type][0]["value"])  # Ensure the state is numeric
+                if new_state != self._state:
+                    _LOGGER.debug("Updating state of %s from %s to %s", self.name, self._state, new_state)
+                    self._state = new_state
+                    self.async_write_ha_state()
+                else:
+                    _LOGGER.debug("State of %s remains unchanged at %s", self.name, self._state)
+            except (ValueError, TypeError) as e:
+                _LOGGER.error("Failed to parse telemetry data for %s: %s", self.name, e)
