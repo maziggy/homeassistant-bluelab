@@ -80,7 +80,7 @@ class BluelabGuardianSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return "Units"  # Force a common unit for all sensors
+        return ""  # Force a common unit for all sensors
 
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
