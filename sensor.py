@@ -64,14 +64,12 @@ class BluelabGuardianSensor(Entity):
 
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
+        _LOGGER.debug("Updating telemetry for %s with data: %s", self.name, telemetry_data)
         if self.sensor_type in telemetry_data:
             new_state = telemetry_data[self.sensor_type][0]["value"]
-            _LOGGER.debug("Fetched telemetry for %s: %s", self.sensor_type, new_state)
-            
-            # Check if the new state is different from the current state
             if new_state != self._state:
-                _LOGGER.debug("Updating state of %s from %s to %s", self._name, self._state, new_state)
+                _LOGGER.debug("Updating state of %s from %s to %s", self.name, self._state, new_state)
                 self._state = new_state
                 self.async_write_ha_state()
             else:
-                _LOGGER.debug("State of %s remains unchanged at %s", self._name, self._state)
+                _LOGGER.debug("State of %s remains unchanged at %s", self.name, self._state)

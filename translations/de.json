@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bluelab Guardian Installation",
+        "description": "Bitte API Token und Organization_ID eingeben. Hilfe unter https://api-docs.edenic.io/",
+        "data": {
+          "api_token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zu Bluelba API Server fehlgeschlagen. Bitte API Token überprüfen."
+    }
+  }
+}

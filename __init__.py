@@ -32,6 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Forward entry setup to sensor and binary_sensor platforms
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
 
+    # Trigger initial telemetry and attribute updates
+    await async_update_telemetry(hass, entry)  # Immediate telemetry update
+    await async_update_device_attributes(hass, entry)  # Immediate attributes update
+
     # Schedule telemetry and attribute updates with event-loop-safe scheduling
     async def schedule_telemetry_update(now):
         await async_update_telemetry(hass, entry)
@@ -39,12 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def schedule_attribute_update(now):
         await async_update_device_attributes(hass, entry)
 
-    # Use event loop safe scheduling
+    # Use event-loop-safe scheduling
     async_track_time_interval(hass, schedule_telemetry_update, TELEMETRY_UPDATE_INTERVAL)
     async_track_time_interval(hass, schedule_attribute_update, ATTRIBUTE_UPDATE_INTERVAL)
 
     return True
-
+    
 
 async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
     """Fetch and update telemetry data for all devices."""

@@ -11,13 +11,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for device in devices:
-        for alarm_type in ["ph_high_alarm", "ph_low_alarm", "temp_high_alarm", "temp_low_alarm", "ec_high_alarm", "ec_low_alarm"]:
+        for alarm_type in [
+            "ph_high_alarm",
+            "ph_low_alarm",
+            "temp_high_alarm",
+            "temp_low_alarm",
+            "ec_high_alarm",
+            "ec_low_alarm",
+            "calibration_required",  # Add the new alarm type here
+        ]:
             entity = BluelabGuardianAlarmBinarySensor(hass, device, alarm_type, api_token)
             entities.append(entity)
 
     hass.data[DOMAIN][entry.entry_id]["attribute_entities"] = entities
     async_add_entities(entities, update_before_add=True)
-
+    
+    
 class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
     """Representation of a Bluelab Guardian binary sensor for alarms."""
 
@@ -54,22 +63,22 @@ class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
     @property
     def icon(self):
         """Return an icon specific to the alarm type."""
-        if "binary_sensor.water_monitor_ec_high_alarm" in self.alarm_type:
-            return "mdi:alert-circle"
+        if self.alarm_type == "calibration_required":
+            return "mdi:alert-circle-check"
         elif "low_alarm" in self.alarm_type:
             return "mdi:alert"
-        return "mdi:eye"  # Default alarm icon
-        
+        elif "high_alarm" in self.alarm_type:
+            return "mdi:alert-circle"
+        return "mdi:eye"
+
     def update_attributes(self, attributes_data):
         """Update binary sensor state based on device attributes."""
         for attribute in attributes_data:
             if attribute["key"] == f"alarm.{self.alarm_type}":
                 new_state = attribute["value"]
-                _LOGGER.debug("Fetched attribute for %s: %s", self.alarm_type, new_state)
-                
                 if new_state != self._state:
-                    _LOGGER.debug("Updating state of %s from %s to %s", self._name, self._state, new_state)
+                    _LOGGER.debug("Updating state of %s from %s to %s", self.name, self._state, new_state)
                     self._state = new_state
                     self.async_write_ha_state()
                 else:
-                    _LOGGER.debug("State of %s remains unchanged at %s", self._name, self._state)
+                    _LOGGER.debug("State of %s remains unchanged at %s", self.name, self._state)

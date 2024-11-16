@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Bluelab Guardian Setup",
-        "description": "Enter your API token to connect to the Bluelab Guardian.",
+        "description": "Enter your API token and organization ID. For more information, see https://api-docs.edenic.io/",
         "data": {
           "api_token": "API Token"
         }
