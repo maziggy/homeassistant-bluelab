@@ -15,7 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 def copy_static_files(hass: HomeAssistant):
     """Copy static assets to the www directory."""
     src_dir = os.path.join(os.path.dirname(__file__))
-    dst_dir = os.path.join(hass.config.path("www"))
+    dst_dir = os.path.join(hass.config.path("www"), "custom_components", "bluelab_guardian")
+
+    _LOGGER.debug("Source directory: %s", src_dir)
+    _LOGGER.debug("Destination directory: %s", dst_dir)
 
     # Ensure the destination directory exists
     os.makedirs(dst_dir, exist_ok=True)
@@ -24,9 +27,14 @@ def copy_static_files(hass: HomeAssistant):
     for file_name in ["icon.png", "logo.png"]:
         src_file = os.path.join(src_dir, file_name)
         dst_file = os.path.join(dst_dir, file_name)
+
+        _LOGGER.debug("Copying %s to %s", src_file, dst_file)
+
         if os.path.exists(src_file):
             shutil.copy(src_file, dst_file)
-            
+        else:
+            _LOGGER.error("File %s does not exist", src_file)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluelab Guardian from a config entry."""
