@@ -3,6 +3,7 @@ import shutil
 import logging
 import requests
 import asyncio
+import aiofiles
 from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -12,7 +13,7 @@ from .const import DOMAIN, DEVICE_LIST_URL, TELEMETRY_URL, DEVICE_ATTRIBUTE_URL,
 _LOGGER = logging.getLogger(__name__)
 
 
-def copy_static_files(hass: HomeAssistant):
+async def copy_static_files(hass: HomeAssistant):
     """Copy static assets to the www directory."""
     src_dir = os.path.join(os.path.dirname(__file__))
     dst_dir = os.path.join(hass.config.path("www"), "custom_components", "bluelab_guardian")
@@ -31,18 +32,19 @@ def copy_static_files(hass: HomeAssistant):
         _LOGGER.debug("Copying %s to %s", src_file, dst_file)
 
         if os.path.exists(src_file):
-            async with aiofiles.open(src_file, "rb") as src, aiofiles.open(dst_file, "wb") as dst:
-                while chunk := await src.read(1024 * 1024):
-                    await dst.write(chunk)
+            async with aiofiles.open(src_file, "rb") as src:
+                async with aiofiles.open(dst_file, "wb") as dst:
+                    while chunk := await src.read(1024 * 1024):  # Read in chunks
+                        await dst.write(chunk)
         else:
             _LOGGER.error("File %s does not exist", src_file)
-
+            
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluelab Guardian from a config entry."""
 
     # Copy static files on setup
-    copy_static_files(hass)
+    await copy_static_files(hass)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
@@ -81,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_track_time_interval(hass, schedule_attribute_update, ATTRIBUTE_UPDATE_INTERVAL)
 
     return True
-    
+        
 
 async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
     """Fetch and update telemetry data for all devices."""

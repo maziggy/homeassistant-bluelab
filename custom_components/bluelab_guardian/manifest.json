@@ -3,7 +3,7 @@
   "name": "Bluelab Guardian",
   "version": "0.1",
   "documentation": "https://github.com/maziggy/homeassistant-bluelab",
-  "requirements": [],
+  "requirements": ["aiofiles"],
   "dependencies": [],
   "config_flow": true,
   "content_in_root": true,
