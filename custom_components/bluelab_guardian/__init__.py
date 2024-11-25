@@ -13,50 +13,32 @@ from .const import DOMAIN, DEVICE_LIST_URL, TELEMETRY_URL, DEVICE_ATTRIBUTE_URL,
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Bluelab Guardian from a config entry."""
+async def copy_static_files(hass: HomeAssistant):
+    """Copy static assets to the www directory."""
+    src_dir = os.path.join(os.path.dirname(__file__))
+    dst_dir = os.path.join(hass.config.path("www"), "custom_components", "bluelab_guardian")
 
-    # Copy static files asynchronously
-    await copy_static_files(hass)
+    _LOGGER.debug("Source directory: %s", src_dir)
+    _LOGGER.debug("Destination directory: %s", dst_dir)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
+    # Ensure the destination directory exists
+    os.makedirs(dst_dir, exist_ok=True)
 
-    api_token = entry.data[CONF_API_TOKEN]
-    organization_id = entry.data.get("organization_id")
-    headers = {"Authorization": api_token}
+    # Copy the icon and logo files
+    for file_name in ["icon.png", "logo.png"]:
+        src_file = os.path.join(src_dir, file_name)
+        dst_file = os.path.join(dst_dir, file_name)
 
-    device_list_url = f"{DEVICE_LIST_URL}{organization_id}"
-    try:
-        response = await hass.async_add_executor_job(lambda: requests.get(device_list_url, headers=headers))
-        response.raise_for_status()
-        devices = response.json()
-        _LOGGER.info("Devices fetched: %s", devices)
-        hass.data[DOMAIN][entry.entry_id]["devices"] = devices
-    except requests.RequestException as err:
-        _LOGGER.error("Failed to fetch devices: %s", err)
-        return False
+        _LOGGER.debug("Copying %s to %s", src_file, dst_file)
 
-    # Forward entry setup to sensor and binary_sensor platforms
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
-
-    # Trigger initial telemetry and attribute updates
-    await async_update_telemetry(hass, entry)  # Immediate telemetry update
-    await async_update_device_attributes(hass, entry)  # Immediate attributes update
-
-    # Schedule telemetry and attribute updates with event-loop-safe scheduling
-    async def schedule_telemetry_update(now):
-        await async_update_telemetry(hass, entry)
-
-    async def schedule_attribute_update(now):
-        await async_update_device_attributes(hass, entry)
-
-    # Use event-loop-safe scheduling
-    async_track_time_interval(hass, schedule_telemetry_update, TELEMETRY_UPDATE_INTERVAL)
-    async_track_time_interval(hass, schedule_attribute_update, ATTRIBUTE_UPDATE_INTERVAL)
-
-    return True
-                
+        if os.path.exists(src_file):
+            async with aiofiles.open(src_file, "rb") as src:
+                async with aiofiles.open(dst_file, "wb") as dst:
+                    while chunk := await src.read(1024 * 1024):  # Read in chunks
+                        await dst.write(chunk)
+        else:
+            _LOGGER.error("File %s does not exist", src_file)
+                            
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluelab Guardian from a config entry."""
