@@ -31,7 +31,9 @@ def copy_static_files(hass: HomeAssistant):
         _LOGGER.debug("Copying %s to %s", src_file, dst_file)
 
         if os.path.exists(src_file):
-            shutil.copy(src_file, dst_file)
+            async with aiofiles.open(src_file, "rb") as src, aiofiles.open(dst_file, "wb") as dst:
+                while chunk := await src.read(1024 * 1024):
+                    await dst.write(chunk)
         else:
             _LOGGER.error("File %s does not exist", src_file)
 
