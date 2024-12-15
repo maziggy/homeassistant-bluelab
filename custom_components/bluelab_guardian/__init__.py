@@ -1,4 +1,5 @@
 import logging
+import time
 import os
 
 import aiofiles
@@ -104,16 +105,24 @@ async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
             response = await hass.async_add_executor_job(lambda: requests.get(telemetry_url, headers=headers))
             response.raise_for_status()
             telemetry_data = response.json()
-            _LOGGER.debug("Telemetry data for device %s: %s", device_id, telemetry_data)
-
             # Apply telemetry updates to all sensor entities
             for entity in hass.data[DOMAIN][entry.entry_id]["telemetry_entities"]:
                 if entity.device_id == device_id:
                     entity.update_telemetry(telemetry_data)
-
         except requests.RequestException as err:
             _LOGGER.error("Failed to fetch telemetry for device %s: %s", device_id, err)
+            ts = int(time.time() * 1000)
+            telemetry_data = {
+                'ph': [{'ts': ts, 'value': '0.0'}],
+                'temperature': [{'ts': ts, 'value': '0.0'}],
+                'electrical_conductivity': [{'ts': ts, 'value': '0.0'}],
+                'current_sw_version': [{'ts': ts, 'value': '0.0.0'}],
+                'current_fw_version': [{'ts': ts, 'value': '0.0.0'}]
 
+            }
+            for entity in hass.data[DOMAIN][entry.entry_id]["telemetry_entities"]:
+                if entity.device_id == device_id:
+                    entity.update_telemetry(telemetry_data)
 
 async def async_update_device_attributes(hass: HomeAssistant, entry: ConfigEntry):
     """Fetch and update device attributes for all devices."""
@@ -137,6 +146,10 @@ async def async_update_device_attributes(hass: HomeAssistant, entry: ConfigEntry
                 if entity.device_id == device_id:
                     _LOGGER.debug(f"device_id: {device_id}")
                     entity.update_attributes(attributes_data)
-
         except requests.RequestException as err:
             _LOGGER.error("Failed to fetch attributes for device %s: %s", device_id, err)
+            ts = int(time.time() * 1000)
+            attributes_data = [{'lastUpdateTs': ts, 'key': 'alarm.calibration_required', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.ec_high_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.ec_low_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.ph_high_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.ph_low_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.temp_high_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'alarm.temp_low_alarm', 'value': False}, {'lastUpdateTs': ts, 'key': 'setting.alarms', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': False}}, {'lastUpdateTs': ts, 'key': 'setting.device_mode', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'DEVICE', 'status': 'SUCCESS', 'value': 'MONITOR'}}, {'lastUpdateTs': ts, 'key': 'setting.device_name', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'DEVICE', 'status': 'SUCCESS', 'value': 'water-monitor'}}, {'lastUpdateTs': ts, 'key': 'setting.ec_high_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}, {'lastUpdateTs': ts, 'key': 'setting.ec_low_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}, {'lastUpdateTs': ts, 'key': 'setting.ph_high_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}, {'lastUpdateTs': ts, 'key': 'setting.ph_low_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}, {'lastUpdateTs': ts, 'key': 'setting.temp_high_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}, {'lastUpdateTs': ts, 'key': 'setting.temp_low_alarm', 'value': {'conflicts': [], 'correlationId': '0-0-0-0-0', 'originator': 'APP', 'status': 'SUCCESS', 'userId': '0-0-0-0-0', 'value': 0.0}}]
+            for entity in hass.data[DOMAIN][entry.entry_id]["attribute_entities"]:
+                if entity.device_id == device_id:
+                    entity.update_telemetry(attributes_data)
