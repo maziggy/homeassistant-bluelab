@@ -1,14 +1,14 @@
-import os
-import shutil
 import logging
-import requests
-import asyncio
+import os
+
 import aiofiles
-from datetime import timedelta
+import requests
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from .const import DOMAIN, DEVICE_LIST_URL, TELEMETRY_URL, DEVICE_ATTRIBUTE_URL, CONF_API_TOKEN, TELEMETRY_UPDATE_INTERVAL, ATTRIBUTE_UPDATE_INTERVAL
+
+from .const import DOMAIN, DEVICE_LIST_URL, TELEMETRY_URL, DEVICE_ATTRIBUTE_URL, CONF_API_TOKEN, \
+    TELEMETRY_UPDATE_INTERVAL, ATTRIBUTE_UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ async def copy_static_files(hass: HomeAssistant):
                         await dst.write(chunk)
         else:
             _LOGGER.error("File %s does not exist", src_file)
-                            
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluelab Guardian from a config entry."""
@@ -64,8 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to fetch devices: %s", err)
         return False
 
-    # Forward entry setup to sensor and binary_sensor platforms
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
+    # Track entities for telemetry and attributes
+    hass.data[DOMAIN][entry.entry_id]["telemetry_entities"] = []  # For sensor entities
+    hass.data[DOMAIN][entry.entry_id]["attribute_entities"] = []  # For number entities
+
+    # Forward entry setup to sensor, binary_sensor, and number platforms
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor", "number", "switch"])
 
     # Trigger initial telemetry and attribute updates
     await async_update_telemetry(hass, entry)  # Immediate telemetry update
@@ -83,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_track_time_interval(hass, schedule_attribute_update, ATTRIBUTE_UPDATE_INTERVAL)
 
     return True
-        
+
 
 async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
     """Fetch and update telemetry data for all devices."""
@@ -102,7 +106,8 @@ async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
             telemetry_data = response.json()
             _LOGGER.debug("Telemetry data for device %s: %s", device_id, telemetry_data)
 
-            for entity in hass.data[DOMAIN][entry.entry_id].get("telemetry_entities", []):
+            # Apply telemetry updates to all sensor entities
+            for entity in hass.data[DOMAIN][entry.entry_id]["telemetry_entities"]:
                 if entity.device_id == device_id:
                     entity.update_telemetry(telemetry_data)
 
@@ -127,8 +132,10 @@ async def async_update_device_attributes(hass: HomeAssistant, entry: ConfigEntry
             attributes_data = response.json()
             _LOGGER.debug("Attributes data for device %s: %s", device_id, attributes_data)
 
-            for entity in hass.data[DOMAIN][entry.entry_id].get("attribute_entities", []):
+            # Apply attribute updates to all entities
+            for entity in hass.data[DOMAIN][entry.entry_id]["attribute_entities"]:
                 if entity.device_id == device_id:
+                    _LOGGER.debug(f"device_id: {device_id}")
                     entity.update_attributes(attributes_data)
 
         except requests.RequestException as err:

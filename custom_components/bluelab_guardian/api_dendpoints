@@ -1,0 +1,8 @@
+
+setting.alarms	boolean	On = true Off = false	true
+setting.ph_low_alarm	number
+setting.ph_high_alarm	number
+setting.ec_low_alarm	number
+setting.ec_high_alarm	number
+setting.temp_low_alarm	number
+setting.temp_high_alarm	Number
