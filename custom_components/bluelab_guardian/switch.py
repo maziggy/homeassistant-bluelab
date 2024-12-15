@@ -90,32 +90,6 @@ class BluelabGuardianAlarmSwitch(SwitchEntity):
         await self._send_command(False)
 
     async def _send_command(self, state):
-        """Send a command to update the alarm state."""
-        if self.device_id not in self.hass.data[DOMAIN]:
-            _LOGGER.error("Device attributes for %s are missing", self.device_id)
-            return
-
-        url = f"{DEVICE_ATTRIBUTE_URL}{self.device_id}"
-        payload = {"setting.alarms": bool(state), }
-        headers = {
-            "Authorization": f"{self.api_token}",
-            "Content-Type": "application/json",
-        }
-
-        _LOGGER.debug("Sending PUT request to %s with payload: %s", url, payload)
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.put(url, json=payload, headers=headers) as response:
-                    response_text = await response.text()
-                    if response.status != 200:
-                        raise ValueError(f"Failed to set alarms: HTTP {response.status} {response_text}")
-                    _LOGGER.debug("Successfully set alarm state for %s to %s", self._device_name, state)
-                    self._state = state
-                    self.async_write_ha_state()
-        except Exception as e:
-            _LOGGER.error("Failed to set alarms for device %s: %s", self.device_id, e)
-
-    async def _send_command(self, state):
         self._state = state
 
         # Access the top-level domain data dynamically
