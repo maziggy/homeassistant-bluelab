@@ -1,5 +1,5 @@
 import logging
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from .const import DOMAIN
 
@@ -16,16 +16,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entity = BluelabGuardianSensor(hass, device, sensor_type, api_token)
             entities.append(entity)
 
-    hass.data[DOMAIN][entry.entry_id]["telemetry_entities"] = entities
+            # Append to telemetry_entities
+            hass.data[DOMAIN][entry.entry_id]["telemetry_entities"].append(entity)
+
     async_add_entities(entities, update_before_add=True)
 
-class BluelabGuardianSensor(Entity):
-    """Representation of a Bluelab Guardian sensor."""
+
+class BluelabGuardianSensor(SensorEntity):
+    """Representation of a Bluelab Guardian telemetry sensor."""
 
     def __init__(self, hass, device, sensor_type, api_token):
         self.hass = hass
         self.device_id = device["id"]
-        self._name = f"{device['label']} {sensor_type.capitalize()}"
         self.sensor_type = sensor_type
         self.api_token = api_token
         self._state = None
@@ -41,7 +43,7 @@ class BluelabGuardianSensor(Entity):
 
     @property
     def name(self):
-        return self._name
+        return f"{self._device_name} {self.sensor_type.capitalize()}"
 
     @property
     def device_info(self):
@@ -54,45 +56,46 @@ class BluelabGuardianSensor(Entity):
 
     @property
     def icon(self):
-        """Return the icon for the sensor based on its type."""
+        """Return the icon for the sensor."""
         if self.sensor_type == "ph":
             return "mdi:ph"
         elif self.sensor_type == "temperature":
             return "mdi:thermometer"
         elif self.sensor_type == "electrical_conductivity":
             return "mdi:fence-electric"
-        return "mdi:eye"  # Default icon
+        return "mdi:eye"
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
         if self.sensor_type == "temperature":
-            return SensorDeviceClass.TEMPERATURE  # Predefined device class for temperature
+            return SensorDeviceClass.TEMPERATURE
         elif self.sensor_type == "electrical_conductivity":
-            return SensorDeviceClass.CONDUCTIVITY  # Predefined device class for conductivity
-        return None  # No device class for 'ph', so return None
+            return SensorDeviceClass.CONDUCTIVITY
+        return None
 
     @property
     def state_class(self):
         """Return the state class of the sensor."""
         return SensorStateClass.MEASUREMENT
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return ""  # Force a common unit for all sensors
-
     def update_telemetry(self, telemetry_data):
         """Update sensor state based on telemetry data."""
-        _LOGGER.debug("Updating telemetry for %s with data: %s", self.name, telemetry_data)
         if self.sensor_type in telemetry_data:
             try:
-                new_state = float(telemetry_data[self.sensor_type][0]["value"])  # Ensure the state is numeric
+                # Extract the first "value" from telemetry_data for this sensor type
+                new_state = float(telemetry_data[self.sensor_type][0]["value"])  # Ensure numeric value
                 if new_state != self._state:
                     _LOGGER.debug("Updating state of %s from %s to %s", self.name, self._state, new_state)
                     self._state = new_state
                     self.async_write_ha_state()
-                else:
-                    _LOGGER.debug("State of %s remains unchanged at %s", self.name, self._state)
-            except (ValueError, TypeError) as e:
-                _LOGGER.error("Failed to parse telemetry data for %s: %s", self.name, e)
+            except (ValueError, TypeError, KeyError) as e:
+                _LOGGER.error("Error updating telemetry for %s: %s", self.name, e)
+
+    def update_attributes(self, attributes_data):
+        """Update attributes dynamically."""
+        # Example of processing attributes if needed
+        for attribute in attributes_data:
+            if attribute["key"] == f"{self.sensor_type}":
+                self._state = attribute["value"]
+                self.async_write_ha_state()
