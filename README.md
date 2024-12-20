@@ -10,7 +10,7 @@ Just my 2 cents: This is one of the first integrations I'm working on. Quite sur
 
 ## Screenshot 
 
-![image](https://github.com/user-attachments/assets/3a892a36-6592-4f7d-aca9-0d00e5ee84e9)
+![image](https://raw.githubusercontent.com/maziggy/homeassistant-bluelab/refs/heads/main/custom_components/bluelab_guardian/screenshots/config.png)
 
 ## Installation
 
