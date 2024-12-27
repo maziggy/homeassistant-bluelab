@@ -1,7 +1,7 @@
 {
   "domain": "bluelab_guardian",
   "name": "Bluelab Guardian",
-  "version": "0.1",
+  "version": "2024.12.27",
   "documentation": "https://github.com/maziggy/homeassistant-bluelab",
   "requirements": ["aiofiles"],
   "dependencies": [],

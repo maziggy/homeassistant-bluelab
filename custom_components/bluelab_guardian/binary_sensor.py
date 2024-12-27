@@ -39,7 +39,7 @@ class BluelabGuardianAlarmBinarySensor(BinarySensorEntity):
         self._name = f"{device['label']} {alarm_type.replace('_', ' ').capitalize()}"
         self.alarm_type = alarm_type
         self.api_token = api_token
-        self._state = None
+        self._state = 0
         self._device_name = device["label"]
 
     @property

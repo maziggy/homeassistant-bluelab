@@ -7,6 +7,5 @@
   "filename": "custom_components/bluelab_guardian",
   "domains": ["bluelab_guardian"],
   "homeassistant": "2023.5.0",
-  "iot_class": "cloud_polling",
-  "icon": "icon.png"
+  "iot_class": "cloud_polling"
 }

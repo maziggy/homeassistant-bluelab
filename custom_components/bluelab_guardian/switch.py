@@ -34,7 +34,7 @@ class BluelabGuardianAlarmSwitch(SwitchEntity):
         self._name = f"{device['label']} Alarm Enabled"
         self._settings = settings
         self.api_token = api_token
-        self._state = None  # Represents whether the alarm is enabled
+        self._state = 0  # Represents whether the alarm is enabled
         self._device_name = device["label"]
         self._key = "setting.alarms"  # Set the key for this entity
 
