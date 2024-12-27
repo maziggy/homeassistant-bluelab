@@ -30,7 +30,7 @@ class BluelabGuardianSensor(SensorEntity):
         self.device_id = device["id"]
         self.sensor_type = sensor_type
         self.api_token = api_token
-        self._state = None
+        self._state = 0
         self._device_name = device["label"]
 
     @property
