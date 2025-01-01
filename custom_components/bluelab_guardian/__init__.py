@@ -110,7 +110,7 @@ async def async_update_telemetry(hass: HomeAssistant, entry: ConfigEntry):
                 if entity.device_id == device_id:
                     entity.update_telemetry(telemetry_data)
         except requests.RequestException as err:
-            _LOGGER.error("Failed to fetch telemetry for device %s: %s", device_id, err)
+            _LOGGER.info("Failed to fetch telemetry for device %s: %s", device_id, err)
 
 
 async def async_update_device_attributes(hass: HomeAssistant, entry: ConfigEntry):
@@ -136,4 +136,4 @@ async def async_update_device_attributes(hass: HomeAssistant, entry: ConfigEntry
                     _LOGGER.debug(f"device_id: {device_id}")
                     entity.update_attributes(attributes_data)
         except requests.RequestException as err:
-            _LOGGER.error("Failed to fetch attributes for device %s: %s", device_id, err)
+            _LOGGER.info("Failed to fetch attributes for device %s: %s", device_id, err)
