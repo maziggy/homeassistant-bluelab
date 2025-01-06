@@ -20,7 +20,7 @@ Just my 2 cents: This is one of the first integrations I'm working on. Quite sur
 2. In Home Assistant, go to **HACS** > **Frontend**.
 3. Click the **"+"** button to add a new repository.
 4. Enter the repository URL: `https://github.com/maziggy/homeassistant-bluelab.git`.
-5. Select **Dashboard** as the category and **Save**.
+5. Select **Integration** as the category and **Save**.
 6. Once installed, add the card to your Lovelace dashboard.
 
 or simply
