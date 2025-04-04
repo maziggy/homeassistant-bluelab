@@ -6,6 +6,8 @@ This custom HACS integration fetches telemetry data from Bluelab Edenic API. I'm
 
 PLEASE NOTE: the API is limited to one request per minute. Thus the interval of 70s is hard-coded, to make sure data fetching is successfull.
 
+PLEASE NOTE2: unfortunately the Api only supports metric system. If you need for example your temperature in °F, you have to calculate it via a custom sensor or helper.
+
 Just my 2 cents: This is one of the first integrations I'm working on. Quite sure that it can be better. Any contributions, recommendations and comments are welcome!
 
 ## Screenshot 
