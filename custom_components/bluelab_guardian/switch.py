@@ -92,26 +92,8 @@ class BluelabGuardianAlarmSwitch(SwitchEntity):
     async def _send_command(self, state):
         self._state = state
 
-        # Access the top-level domain data dynamically
-        domain_data = self.hass.data.get(DOMAIN, {})
-        if not domain_data:
-            _LOGGER.error("No data found under DOMAIN.")
-            return
-
-        # Get the first key dynamically and attribute entities
-        first_key = next(iter(domain_data))
-        attribute_entities = domain_data[first_key].get('attribute_entities', [])
-
-        _LOGGER.debug(f"attribute_entities: {attribute_entities}")
-
-        for entity in attribute_entities:
-            entity_name = entity.entity_id  # Get the entity name
-            if "_alarm_enabled" in entity_name:
-                _LOGGER.debug(f"found switch entity {entity_name}")
-
-                curr_state = self.hass.states.get(entity_name).state or False
-
-                _LOGGER.debug(f"Updating {entity_name} to {self._state}")
+        # No need to loop through entities - we're only updating this specific device
+        _LOGGER.debug(f"Setting alarm state for device {self.device_id} to {state}")
 
         # Construct the payload
         payload = {"setting.alarms": self._state, }

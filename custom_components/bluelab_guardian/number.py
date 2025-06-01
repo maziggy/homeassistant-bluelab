@@ -133,7 +133,7 @@ class BluelabGuardianNumber(NumberEntity):
 
         _LOGGER.debug(f"attribute_entities: {attribute_entities}")
 
-        # Extract relevant values from attribute_entities
+        # Extract relevant values from attribute_entities for THIS device only
         alarms = {
             "ph_low_alarm": 0.0,
             "ph_high_alarm": 0.0,
@@ -143,20 +143,26 @@ class BluelabGuardianNumber(NumberEntity):
             "temp_high_alarm": 0,
         }
 
+        # Only collect values from entities belonging to the same device
         for entity in attribute_entities:
-            entity_str = entity.entity_id
-            if "number.water_monitor_ph_low_alarm" in entity_str:
-                alarms["ph_low_alarm"] = float(self.hass.states.get(entity_str).state) or 0.0
-            elif "number.water_monitor_ph_high_alarm" in entity_str:
-                alarms["ph_high_alarm"] = float(self.hass.states.get(entity_str).state) or 0.0
-            elif "number.water_monitor_ec_low_alarm" in entity_str:
-                alarms["ec_low_alarm"] = float(self.hass.states.get(entity_str).state) or 0.0
-            elif "number.water_monitor_ec_high_alarm" in entity_str:
-                alarms["ec_high_alarm"] = float(self.hass.states.get(entity_str).state) or 0.0
-            elif "number.water_monitor_temp_low_alarm" in entity_str:
-                alarms["temp_low_alarm"] = int(float(self.hass.states.get(entity_str).state)) or 0
-            elif "number.water_monitor_temp_high_alarm" in entity_str:
-                alarms["temp_high_alarm"] = int(float(self.hass.states.get(entity_str).state)) or 0
+            # Check if this entity belongs to the current device
+            if hasattr(entity, 'device_id') and entity.device_id == self.device_id:
+                if isinstance(entity, BluelabGuardianNumber):
+                    # Get the current state for this specific alarm setting
+                    entity_state = self.hass.states.get(entity.entity_id)
+                    if entity_state and entity_state.state not in ['unknown', 'unavailable']:
+                        try:
+                            value = float(entity_state.state)
+                            # Use the current entity's value if it matches the setting being updated
+                            if entity.setting == self.setting:
+                                value = self._state
+                            
+                            if entity.setting == "temp_low_alarm" or entity.setting == "temp_high_alarm":
+                                alarms[entity.setting] = int(value)
+                            else:
+                                alarms[entity.setting] = value
+                        except (ValueError, TypeError):
+                            _LOGGER.warning(f"Could not parse state for {entity.entity_id}: {entity_state.state}")
 
         # Construct the payload
         payload = {
