@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Append to attribute_entities
             hass.data[DOMAIN][entry.entry_id]["attribute_entities"].append(entity)
 
-        async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BluelabGuardianAlarmSwitch(SwitchEntity):
